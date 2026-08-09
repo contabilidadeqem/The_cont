@@ -1,0 +1,48 @@
+// Banco relacional (Postgres) com campos JSON para dados flexíveis,
+// já preparado para evoluir para multi-tenant na Fase 5 (basta adicionar
+// um campo accountId/organizationId em Client sem quebrar o modelo atual).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Client {
+  id                          String   @id @default(cuid())
+  cnpj                        String   @unique
+  razaoSocial                 String
+  nomeFantasia                String?
+  situacaoCadastral           String?
+  cnaePrincipal               String?
+  cnaesSecundarios            Json?
+  porte                       String?
+  municipio                   String?
+  uf                          String?
+  regimeInferido              String?
+  regimeTributarioConfirmado  String   @default("Não definido")
+  setorAtuacao                String?
+  observacoes                 String?
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+  meetings                    Meeting[]
+}
+
+model Meeting {
+  id             String    @id @default(cuid())
+  clientId       String
+  client         Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  // Retrato do perfil da empresa no momento em que a reunião foi criada —
+  // garante que editar o perfil depois não altera reuniões passadas.
+  perfilSnapshot Json
+  perguntas      Json      @default("[]")
+  documento      Json      @default("{\"oportunidades\":[]}")
+  criadoEm       DateTime  @default(now())
+  atualizadoEm   DateTime  @updatedAt
+  exportadoEm    DateTime?
+
+  @@index([clientId])
+}
