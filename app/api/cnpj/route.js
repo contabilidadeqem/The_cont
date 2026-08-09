@@ -13,12 +13,29 @@ export async function GET(request) {
     return NextResponse.json({ error: "CNPJ inválido." }, { status: 400 });
   }
 
-  const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
-  if (res.status === 404) {
-    return NextResponse.json({ error: "CNPJ não encontrado na base pública." }, { status: 404 });
+  let res;
+  let lastStatus;
+  let lastBody = "";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+    lastStatus = res.status;
+    if (res.status === 404) {
+      return NextResponse.json({ error: "CNPJ não encontrado na base pública." }, { status: 404 });
+    }
+    if (res.ok) break;
+    lastBody = await res.text().catch(() => "");
+    if (attempt === 0) await new Promise((r) => setTimeout(r, 800)); // 1 nova tentativa após falha transitória
   }
+
   if (!res.ok) {
-    return NextResponse.json({ error: "Não foi possível consultar o CNPJ agora." }, { status: 502 });
+    const motivo =
+      lastStatus === 429
+        ? "Limite de consultas da BrasilAPI atingido no momento — aguarde alguns segundos e tente de novo."
+        : `A BrasilAPI retornou erro ${lastStatus}: ${lastBody.slice(0, 200) || "sem detalhes"}`;
+    return NextResponse.json({ error: `Não foi possível consultar o CNPJ agora. ${motivo}` }, { status: 502 });
   }
 
   const d = await res.json();
