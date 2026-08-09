@@ -18,7 +18,11 @@ export async function GET(request) {
   let lastBody = "";
   for (let attempt = 0; attempt < 2; attempt++) {
     res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, {
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
+      },
       cache: "no-store",
     });
     lastStatus = res.status;
