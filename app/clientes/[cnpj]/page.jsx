@@ -88,7 +88,7 @@ export default function FichaClientePage({ params }) {
           <Link className="link-back" href="/">← Voltar para a carteira</Link>
           <h1 className="title">Ficha do cliente</h1>
         </div>
-        <button className="btn btn-teal" onClick={novaReuniao} disabled={criandoReuniao}>
+        <button className="btn btn-ghost-invert" onClick={novaReuniao} disabled={criandoReuniao}>
           {criandoReuniao ? "Criando..." : "+ Nova reunião"}
         </button>
       </header>
